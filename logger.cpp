@@ -1,6 +1,5 @@
 #include "logger.h"
 #include <strsafe.h>
-#include <time.h>
 
 logger logger::_logger;
 
@@ -20,38 +19,38 @@ bool logger::initialize
     if (StringCchPrintfW(_root, _name_max, L"%s", root) != S_OK) name_result = false;
     if (CreateDirectoryW(_root, NULL) == ERROR_PATH_NOT_FOUND) __debugbreak();
 
-    for (int i = 0; i < _type_count; ++i)
+    for (unsigned int i = 0; i < _type_count; ++i)
         if (StringCchPrintfW(_types[i]._type, _name_max, L"%s", types[i]) != S_OK) name_result = false;
 
-    bool path_result = set_path();
+    __time64_t in_time;
+    tm in_tm;
+
+    bool path_result = set_path(&in_time, &in_tm);
 
     if (name_result && path_result) return true;
 
     return false;
 }
 
-bool logger::set_path(void) noexcept
+bool logger::set_path(__time64_t* out_time, tm* out_tm) noexcept
 {
-    __time64_t time;
-    struct tm Tm;
+    _time64(out_time);
+    _localtime64_s(out_tm, out_time);
 
-    _time64(&time);
-    _localtime64_s(&Tm, &time);
+    out_tm->tm_year += 1900;
+    out_tm->tm_mon += 1;
 
-    Tm.tm_year += 1900;
-    Tm.tm_mon += 1;
-
-    if (_month == Tm.tm_mon) return true;
+    if (_month == out_tm->tm_mon) return true;
 
     bool result = true;
 
-    if (StringCchPrintfW(_root_path, _path_max, L"%s\\%04d%02d", _root, Tm.tm_year, Tm.tm_mon) != S_OK) result = false;
+    if (StringCchPrintfW(_root_path, _path_max, L"%s\\%04d%02d", _root, out_tm->tm_year, out_tm->tm_mon) != S_OK) result = false;
     if (CreateDirectoryW(_root_path, NULL) == ERROR_PATH_NOT_FOUND) __debugbreak();
 
-    for (int i = 0; i < _type_count; ++i)
-        if (StringCchPrintfW(_types[i]._path, _path_max, L"%s\\%04d%02d_%s.log", _root_path, Tm.tm_year, Tm.tm_mon, _types[i]._type) != S_OK) result = false;
+    for (unsigned int i = 0; i < _type_count; ++i)
+        if (StringCchPrintfW(_types[i]._path, _path_max, L"%s\\%04d%02d_%s.log", _root_path, out_tm->tm_year, out_tm->tm_mon, _types[i]._type) != S_OK) result = false;
 
-    InterlockedExchange(&_month, Tm.tm_mon);
+    InterlockedExchange(&_month, out_tm->tm_mon);
 
     return result;
 }

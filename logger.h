@@ -1,6 +1,7 @@
 #pragma once
 
 #include <windows.h>
+#include <time.h>
 
 class logger
 {
@@ -61,7 +62,7 @@ private:
 	}
 
 private:
-	bool set_path(void) noexcept;
+	bool set_path(__time64_t* out_time, tm* out_tm) noexcept;
 
 private:
 	static logger _logger;
