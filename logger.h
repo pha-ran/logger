@@ -3,6 +3,15 @@
 #include <windows.h>
 #include <time.h>
 
+#define LOG(level, type, format, ...)\
+do\
+{\
+    if (level >= logger::get_instance().get_level())\
+	{\
+		logger::get_instance().log(level, type, format, ##__VA_ARGS__);\
+	}\
+} while(0)
+
 class logger
 {
 public:
@@ -40,6 +49,8 @@ public:
 		const wchar_t types[_type_max][_name_max],
 		unsigned int type_count
 	) noexcept;
+
+	void log(unsigned int level, const wchar_t* const type, const wchar_t* format, ...) noexcept;
 
 private:
 	static constexpr wchar_t _header[] = L"[YY/MM/DD][HH:MM:SS][TAG][LOGCOUNT]";

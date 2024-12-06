@@ -32,6 +32,22 @@ bool logger::initialize
     return false;
 }
 
+void logger::log(unsigned int level, const wchar_t* const type, const wchar_t* format, ...) noexcept
+{
+    __time64_t in_time;
+    tm in_tm;
+
+    bool path_result = set_path(&in_time, &in_tm);
+    unsigned int log_count = InterlockedIncrement(&_log_count);
+
+    va_list vl;
+    va_start(vl, format);
+
+    vwprintf(format, vl);
+
+    va_end(vl);
+}
+
 bool logger::set_path(__time64_t* out_time, tm* out_tm) noexcept
 {
     _time64(out_time);
