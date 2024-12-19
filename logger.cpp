@@ -34,17 +34,51 @@ bool logger::initialize
 
 void logger::log(unsigned int level, const wchar_t* const type, const wchar_t* format, ...) noexcept
 {
+    size_t length;
+    if (StringCchLengthW(type, _name_max, &length) != S_OK) return;
+
+    unsigned int index = 0;
+    for (;;)
+    {
+        if (wcscmp(type, _types[index]._type) == 0) break;
+        ++index;
+        if (index >= _type_max) return;
+        continue;
+    }
+
     __time64_t in_time;
     tm in_tm;
-
     bool path_result = set_path(&in_time, &in_tm);
+    
     unsigned int log_count = InterlockedIncrement(&_log_count);
 
     va_list vl;
     va_start(vl, format);
+    AcquireSRWLockExclusive(&_types[index]._lock);
 
-    vwprintf(format, vl);
+    wchar_t log_message[_log_max];
+    StringCchPrintfW(
+        log_message, _log_max, _header_format,
+        in_tm.tm_year - 2000, in_tm.tm_mon, in_tm.tm_mday,
+        in_tm.tm_hour, in_tm.tm_min, in_tm.tm_sec,
+        _tag[level], log_count
+    );
 
+    if (StringCchVPrintfW(log_message + _header_length, _log_max - _header_length, format, vl) != S_OK)
+        ; //todo
+
+#pragma warning(suppress:6031)
+    StringCchLengthW(log_message, _log_max, &length);
+    log_message[length - 1] = L'\n';
+
+    FILE* file;
+    _wfopen_s(&file, _types[index]._path, L"a, ccs=UTF-16LE");
+#pragma warning(suppress:6387)
+    fwrite(log_message, 1, length * sizeof(wchar_t), file);
+#pragma warning(suppress:6387)
+    fclose(file);
+
+    ReleaseSRWLockExclusive(&_types[index]._lock);
     va_end(vl);
 }
 

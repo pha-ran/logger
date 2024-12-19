@@ -54,8 +54,8 @@ public:
 
 private:
 	static constexpr wchar_t _header[] = L"[YY/MM/DD][HH:MM:SS][TAG][LOGCOUNT]";
-	static constexpr unsigned int _header_size = sizeof(_header) - sizeof(wchar_t);
-	static constexpr unsigned int _header_count = _header_size / 2;
+	static constexpr wchar_t _header_format[] = L"[%02d/%02d/%02d][%02d:%02d:%02d][%s][%08d]";
+	static constexpr unsigned int _header_length = (sizeof(_header) - sizeof(wchar_t)) / 2;
 
 private:
 	inline logger(void) noexcept
