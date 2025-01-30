@@ -6,11 +6,11 @@ logger logger::_logger;
 bool logger::initialize
 (
     const wchar_t root[_name_max],
-    const wchar_t types[_type_max][_name_max],
+    const wchar_t* types[_type_max],
     unsigned int type_count
 ) noexcept
 {
-    if (type_count >= _type_max) __debugbreak();
+    if (type_count > _type_max) __debugbreak();
 
     _type_count = type_count;
 
@@ -49,7 +49,7 @@ void logger::log(unsigned int level, const wchar_t* const type, const wchar_t* f
     __time64_t in_time;
     tm in_tm;
     bool path_result = set_path(&in_time, &in_tm);
-    
+
     unsigned int log_count = InterlockedIncrement(&_log_count);
 
     va_list vl;
@@ -69,12 +69,12 @@ void logger::log(unsigned int level, const wchar_t* const type, const wchar_t* f
 
 #pragma warning(suppress:6031)
     StringCchLengthW(log_message, _log_max, &length);
-    log_message[length - 1] = L'\n';
+    log_message[length] = L'\n';
 
     FILE* file;
     _wfopen_s(&file, _types[index]._path, L"a, ccs=UTF-16LE");
 #pragma warning(suppress:6387)
-    fwrite(log_message, 1, length * sizeof(wchar_t), file);
+    fwrite(log_message, 1, length * sizeof(wchar_t) + sizeof(wchar_t), file);
 #pragma warning(suppress:6387)
     fclose(file);
 

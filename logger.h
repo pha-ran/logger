@@ -46,7 +46,7 @@ public:
 public:
 	bool initialize(
 		const wchar_t root[_name_max],
-		const wchar_t types[_type_max][_name_max],
+		const wchar_t* types[_type_max],
 		unsigned int type_count
 	) noexcept;
 
